@@ -1,59 +1,55 @@
 <script setup>
 import AppLayout from './components/layout/AppLayout.vue';
+import TechBackground from './components/TechBackground.vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const showLayout = computed(() => route.path !== '/');
+
+// 在组件挂载时强制应用暗色主题
+onMounted(() => {
+  // 确保文档根元素有dark类
+  document.documentElement.classList.add('dark');
+  
+  // 添加全局样式覆盖，确保背景色统一
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `
+    html, body, #app {
+      background-color: var(--background-dark) !important;
+    }
+    
+    .el-main, .el-container, .el-aside, .el-header, .el-footer {
+      background-color: var(--background-dark) !important;
+    }
+    
+    .el-table, .el-table tr, .el-table th {
+      background-color: var(--background-card) !important;
+      color: var(--text-primary) !important;
+    }
+    
+    .router-view-container {
+      background-color: var(--background-dark) !important;
+    }
+  `;
+  document.head.appendChild(styleEl);
+});
 </script>
 
 <template>
-  <AppLayout />
+  <TechBackground v-if="showLayout" />
+  <AppLayout v-if="showLayout" />
+  <router-view v-else />
 </template>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+@import './styles/main.scss';
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Noto Sans SC', sans-serif;
-  line-height: 1.6;
-  color: #333;
-  background-color: #f8f9fa;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-a {
-  color: #409EFF;
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  margin-bottom: 0.5em;
-  font-weight: 600;
-  line-height: 1.25;
-}
-
-.page-title {
-  font-size: 2rem;
-  color: #303133;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eaeaea;
-}
-
-.text-center {
-  text-align: center;
-}
+/* 全局工具类 */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
 
 .mt-1 { margin-top: 0.25rem; }
 .mt-2 { margin-top: 0.5rem; }
@@ -84,29 +80,64 @@ h1, h2, h3, h4, h5, h6 {
   margin-right: auto;
 }
 
-.flex {
-  display: flex;
-}
-
-.flex-col {
-  flex-direction: column;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
 
 .gap-1 { gap: 0.25rem; }
 .gap-2 { gap: 0.5rem; }
 .gap-3 { gap: 1rem; }
 .gap-4 { gap: 1.5rem; }
 .gap-5 { gap: 3rem; }
+
+/* 科技感动画样式类 */
+.tech-glow {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+    animation: glow 2s infinite;
+  }
+}
+
+.tech-badge {
+  background-color: var(--primary-color);
+  color: var(--background-dark);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+  box-shadow: 0 0 10px rgba(255, 220, 0, 0.3);
+}
+
+/* 全局暗色主题覆盖 */
+html, body, #app {
+  background-color: var(--background-dark);
+  color: var(--text-primary);
+}
+
+/* 处理可能导致白色背景的内置组件 */
+.el-popper, .el-select-dropdown, .el-picker-panel {
+  background-color: var(--background-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.el-date-table td, .el-month-table td, .el-year-table td {
+  color: var(--text-primary) !important;
+}
+
+.el-date-table td.current:not(.disabled) span {
+  background-color: var(--primary-color) !important;
+  color: var(--background-dark) !important;
+}
 </style>

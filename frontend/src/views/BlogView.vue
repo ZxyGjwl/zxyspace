@@ -227,6 +227,7 @@ const formatDate = (dateString) => {
 h1 {
   text-align: center;
   margin-bottom: 2rem;
+  color: var(--text-primary);
 }
 
 .filters {
@@ -244,17 +245,20 @@ h1 {
 .search-box input {
   width: 100%;
   padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
+  background-color: var(--background-lighter);
+  color: var(--text-primary);
 }
 
 .category-filter select {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
-  background-color: white;
+  background-color: var(--background-lighter);
+  color: var(--text-primary);
 }
 
 .post-grid {
@@ -264,17 +268,19 @@ h1 {
 }
 
 .post-card {
-  background-color: white;
+  background-color: var(--background-card);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
+  border: 1px solid var(--border-color);
 }
 
 .post-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  border-color: var(--primary-color);
 }
 
 .post-image {
@@ -289,22 +295,24 @@ h1 {
 
 .post-category {
   display: inline-block;
-  background-color: var(--color-background-soft);
-  color: var(--color-text-light);
+  background-color: var(--primary-color);
+  color: var(--background-dark);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
   margin-bottom: 0.5rem;
+  font-weight: 600;
 }
 
 .post-title {
   font-size: 1.25rem;
   margin-bottom: 0.5rem;
   line-height: 1.3;
+  color: var(--text-primary);
 }
 
 .post-excerpt {
-  color: var(--color-text-light);
+  color: var(--text-secondary);
   margin-bottom: 1rem;
   font-size: 0.875rem;
   display: -webkit-box;
@@ -317,7 +325,7 @@ h1 {
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: var(--color-text-light);
+  color: var(--text-secondary);
 }
 
 .pagination {
@@ -328,32 +336,36 @@ h1 {
 }
 
 .page-btn {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: var(--primary-color);
+  color: var(--background-dark);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  font-weight: 600;
 }
 
 .page-btn:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+  background-color: var(--primary-variant);
+  box-shadow: 0 0 10px rgba(255, 220, 0, 0.4);
 }
 
 .page-btn:disabled {
-  background-color: var(--color-background-mute);
+  background-color: var(--background-lighter);
   cursor: not-allowed;
+  color: var(--text-disabled);
 }
 
 .page-info {
   margin: 0 1rem;
+  color: var(--text-secondary);
 }
 
 .loading, .error, .no-posts {
   text-align: center;
   padding: 3rem 0;
-  color: var(--color-text-light);
+  color: var(--text-secondary);
 }
 
 .error {

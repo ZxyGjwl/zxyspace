@@ -16,6 +16,8 @@ public class CommentDto {
     private Long id;
     private String content;
     private UserSummaryDto user;
+    private Long postId;
     private int likes;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -31,4 +31,13 @@ public class Tag extends BaseEntity {
 
     @ManyToMany(mappedBy = "tags")
     private Set<Post> posts = new HashSet<>();
+    
+    // 手动添加getPosts方法，解决Lombok可能的编译问题
+    public Set<Post> getPosts() {
+        return this.posts;
+    }
+    
+    public void setPosts(Set<Post> posts) {
+        this.posts = posts;
+    }
 }

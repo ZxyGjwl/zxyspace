@@ -223,6 +223,7 @@
 h1 {
   text-align: center;
   margin-bottom: 2rem;
+  color: var(--text-primary);
 }
 
 .about-content {
@@ -244,16 +245,17 @@ h1 {
   height: 180px;
   border-radius: 50%;
   object-fit: cover;
-  border: 5px solid white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 5px solid var(--primary-color);
+  box-shadow: 0 0 15px rgba(255, 220, 0, 0.3);
 }
 
 .profile-info h2 {
   margin-bottom: 0.5rem;
+  color: var(--primary-color);
 }
 
 .profile-tagline {
-  color: var(--color-text-light);
+  color: var(--text-secondary);
   margin-bottom: 1rem;
 }
 
@@ -267,31 +269,37 @@ h1 {
 .social-link {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background-color: var(--color-background-soft);
+  background-color: var(--background-lighter);
   border-radius: 4px;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 .social-link:hover {
-  background-color: var(--color-background-mute);
+  background-color: var(--primary-color);
+  color: var(--background-dark);
 }
 
 .biography-section, .skills-section, .experience-section, .contact-section {
-  background-color: white;
+  background-color: var(--background-card);
   border-radius: 8px;
   padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
 }
 
 .biography-section h3, .skills-section h3, .experience-section h3, .contact-section h3 {
   margin-bottom: 1.5rem;
-  border-bottom: 2px solid var(--color-background-soft);
+  border-bottom: 2px solid var(--primary-color);
   padding-bottom: 0.5rem;
+  color: var(--primary-color);
 }
 
 .biography-section p {
   margin-bottom: 1rem;
   line-height: 1.6;
+  color: var(--text-primary);
 }
 
 .skills-category {
@@ -300,6 +308,7 @@ h1 {
 
 .skills-category h4 {
   margin-bottom: 1rem;
+  color: var(--text-primary);
 }
 
 .skills-grid {
@@ -315,19 +324,21 @@ h1 {
 .skill-name {
   margin-bottom: 0.5rem;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .skill-bar {
   height: 8px;
-  background-color: var(--color-background-soft);
+  background-color: var(--background-lighter);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .skill-level {
   height: 100%;
-  background-color: var(--color-primary);
+  background-color: var(--primary-color);
   border-radius: 4px;
+  box-shadow: 0 0 5px rgba(255, 220, 0, 0.5);
 }
 
 .timeline {
@@ -342,7 +353,7 @@ h1 {
   top: 0;
   height: 100%;
   width: 2px;
-  background-color: var(--color-background-mute);
+  background-color: var(--border-color);
 }
 
 .timeline-item {
@@ -361,24 +372,30 @@ h1 {
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  background-color: var(--color-primary);
-  border: 2px solid white;
+  background-color: var(--primary-color);
+  border: 2px solid var(--background-dark);
+  box-shadow: 0 0 5px rgba(255, 220, 0, 0.5);
 }
 
 .timeline-date {
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--primary-color);
   margin-bottom: 0.5rem;
 }
 
 .timeline-content h4 {
   margin-bottom: 0.25rem;
+  color: var(--text-primary);
 }
 
 .timeline-company {
-  color: var(--color-text-light);
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   font-style: italic;
+}
+
+.timeline-description {
+  color: var(--text-primary);
 }
 
 .contact-info {
@@ -393,6 +410,11 @@ h1 {
 .contact-label {
   font-weight: 600;
   width: 80px;
+  color: var(--text-primary);
+}
+
+.contact-value {
+  color: var(--text-secondary);
 }
 
 .contact-form .form-group {
@@ -403,15 +425,18 @@ h1 {
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .contact-form input, .contact-form textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-family: inherit;
   font-size: 1rem;
+  background-color: var(--background-lighter);
+  color: var(--text-primary);
 }
 
 .contact-form textarea {
@@ -419,18 +444,20 @@ h1 {
 }
 
 .submit-button {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: var(--primary-color);
+  color: var(--background-dark);
   border: none;
   padding: 0.75rem 1.5rem;
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  font-weight: 600;
 }
 
 .submit-button:hover {
-  background-color: var(--color-primary-hover);
+  background-color: var(--primary-variant);
+  box-shadow: 0 0 10px rgba(255, 220, 0, 0.4);
 }
 
 @media (min-width: 768px) {

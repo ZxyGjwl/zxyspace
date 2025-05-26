@@ -424,10 +424,11 @@ const formatDate = (dateString) => {
 }
 
 .post-container {
-  background-color: white;
+  background-color: var(--background-card);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
 }
 
 .post-header {
@@ -439,6 +440,7 @@ const formatDate = (dateString) => {
   margin-bottom: 1.5rem;
   font-size: 2rem;
   line-height: 1.2;
+  color: var(--text-primary);
 }
 
 .post-meta {
@@ -447,15 +449,16 @@ const formatDate = (dateString) => {
   gap: 1rem;
   margin-bottom: 1rem;
   font-size: 0.875rem;
-  color: var(--color-text-light);
+  color: var(--text-secondary);
 }
 
 .post-category {
   display: inline-block;
-  background-color: var(--color-background-soft);
-  color: var(--color-text-light);
+  background-color: var(--primary-color);
+  color: var(--background-dark);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
+  font-weight: 600;
 }
 
 .post-author {
@@ -463,6 +466,7 @@ const formatDate = (dateString) => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  color: var(--text-primary);
 }
 
 .author-avatar {
@@ -470,6 +474,7 @@ const formatDate = (dateString) => {
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid var(--primary-color);
 }
 
 .post-cover img {
@@ -481,11 +486,13 @@ const formatDate = (dateString) => {
 .post-content {
   padding: 2rem;
   line-height: 1.7;
+  color: var(--text-primary);
 }
 
 .post-content h2 {
   margin-top: 2rem;
   margin-bottom: 1rem;
+  color: var(--primary-color);
 }
 
 .post-content p {
@@ -502,7 +509,7 @@ const formatDate = (dateString) => {
 }
 
 .post-content pre {
-  background-color: var(--color-background-soft);
+  background-color: var(--background-lighter);
   padding: 1rem;
   border-radius: 4px;
   overflow-x: auto;
@@ -510,7 +517,8 @@ const formatDate = (dateString) => {
 }
 
 .post-content code {
-  font-family: monospace;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--primary-color);
 }
 
 .post-tags {
@@ -522,7 +530,7 @@ const formatDate = (dateString) => {
 }
 
 .tag-label {
-  color: var(--color-text-light);
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
@@ -533,19 +541,20 @@ const formatDate = (dateString) => {
 }
 
 .tag {
-  background-color: var(--color-background-soft);
-  color: var(--color-text-light);
+  background-color: var(--background-lighter);
+  color: var(--primary-color);
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.75rem;
+  border: 1px solid var(--primary-color);
 }
 
 .post-actions {
   display: flex;
   justify-content: space-around;
   padding: 1rem 2rem;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .action-btn {
@@ -557,15 +566,17 @@ const formatDate = (dateString) => {
   cursor: pointer;
   padding: 0.5rem 1rem;
   border-radius: 4px;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  color: var(--text-primary);
 }
 
 .action-btn:hover {
-  background-color: var(--color-background-soft);
+  background-color: var(--background-lighter);
+  color: var(--primary-color);
 }
 
 .like-btn {
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .post-navigation {
@@ -573,7 +584,7 @@ const formatDate = (dateString) => {
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   padding: 1.5rem 2rem;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .prev-post, .next-post {
@@ -592,12 +603,12 @@ const formatDate = (dateString) => {
 .nav-label {
   display: block;
   font-size: 0.75rem;
-  color: var(--color-text-light);
+  color: var(--text-secondary);
   margin-bottom: 0.25rem;
 }
 
 .nav-title {
-  color: var(--color-primary);
+  color: var(--primary-color);
   font-weight: 600;
 }
 
@@ -607,6 +618,7 @@ const formatDate = (dateString) => {
 
 .comments-section h2 {
   margin-bottom: 1.5rem;
+  color: var(--text-primary);
 }
 
 .comment-form {
@@ -616,31 +628,36 @@ const formatDate = (dateString) => {
 .comment-form textarea {
   width: 100%;
   padding: 1rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   resize: vertical;
   margin-bottom: 1rem;
   font-family: inherit;
   font-size: 1rem;
+  background-color: var(--background-lighter);
+  color: var(--text-primary);
 }
 
 .comment-form button {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: var(--primary-color);
+  color: var(--background-dark);
   border: none;
   padding: 0.5rem 1.5rem;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  font-weight: 600;
 }
 
 .comment-form button:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+  background-color: var(--primary-variant);
+  box-shadow: 0 0 10px rgba(255, 220, 0, 0.4);
 }
 
 .comment-form button:disabled {
-  background-color: var(--color-background-mute);
+  background-color: var(--background-lighter);
   cursor: not-allowed;
+  color: var(--text-disabled);
 }
 
 .comments-list {
@@ -650,9 +667,10 @@ const formatDate = (dateString) => {
 }
 
 .comment {
-  background-color: var(--color-background-soft);
+  background-color: var(--background-lighter);
   padding: 1.5rem;
   border-radius: 8px;
+  border: 1px solid var(--border-color);
 }
 
 .comment-author {
@@ -667,19 +685,22 @@ const formatDate = (dateString) => {
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid var(--primary-color);
 }
 
 .comment-name {
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .comment-date {
   font-size: 0.75rem;
-  color: var(--color-text-light);
+  color: var(--text-secondary);
 }
 
 .comment-content {
   margin-bottom: 1rem;
+  color: var(--text-primary);
 }
 
 .comment-actions {
@@ -691,28 +712,29 @@ const formatDate = (dateString) => {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-text-light);
+  color: var(--text-secondary);
   padding: 0;
   font-size: 0.875rem;
   transition: color 0.3s;
 }
 
 .comment-like:hover, .comment-reply:hover {
-  color: var(--color-primary);
+  color: var(--primary-color);
 }
 
 .no-comments {
   text-align: center;
   padding: 1.5rem;
-  color: var(--color-text-light);
-  background-color: var(--color-background-soft);
+  color: var(--text-secondary);
+  background-color: var(--background-lighter);
   border-radius: 8px;
+  border: 1px solid var(--border-color);
 }
 
 .loading, .error {
   text-align: center;
   padding: 3rem 0;
-  color: var(--color-text-light);
+  color: var(--text-secondary);
 }
 
 .error {
@@ -724,7 +746,7 @@ const formatDate = (dateString) => {
 }
 
 .error-action a {
-  color: var(--color-primary);
+  color: var(--primary-color);
   text-decoration: underline;
 }
 </style>

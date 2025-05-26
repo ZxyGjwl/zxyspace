@@ -67,4 +67,21 @@ public class User extends BaseEntity {
         ROLE_USER,
         ROLE_ADMIN
     }
+
+    // 手动添加getter方法，以解决Lombok可能的编译问题
+    public Role getRole() {
+        return role;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+    
+    public String getPassword() {
+        return password;
+    }
 }

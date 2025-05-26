@@ -1,0 +1,52 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:zxyspace
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  profiles:
+    active: dev
+
+# JWT配置
+jwt:
+  secret: ${JWT_SECRET:zxyspacesecretkey2024forinitialsetupthisislongerthantherequired256bits}
+  expiration: 86400000 # 24小时有效期
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.zxyspace: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+    org.hibernate: INFO
+
+# OpenAPI配置
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  packages-to-scan: com.zxyspace.controller 

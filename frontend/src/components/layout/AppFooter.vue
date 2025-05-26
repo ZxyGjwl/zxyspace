@@ -4,27 +4,36 @@ const currentYear = new Date().getFullYear();
 
 <template>
   <footer class="footer">
-    <div class="footer-content">
+    <div class="footer-container">
       <div class="footer-section">
-        <h3>ZXY Space</h3>
+        <h3 class="footer-heading">ZXY Space</h3>
         <p>个人技术/娱乐博客网站，分享技术经验、生活见闻和各种有趣的内容。</p>
+        <div class="social-links">
+          <a href="#" class="social-link" aria-label="GitHub">
+            <i class="el-icon-platform-eleme"></i>
+          </a>
+          <a href="#" class="social-link" aria-label="Twitter">
+            <i class="el-icon-s-promotion"></i>
+          </a>
+          <a href="#" class="social-link" aria-label="LinkedIn">
+            <i class="el-icon-connection"></i>
+          </a>
+        </div>
       </div>
       <div class="footer-section">
-        <h3>快速链接</h3>
-        <ul>
+        <h3 class="footer-heading">快速链接</h3>
+        <ul class="footer-links">
           <li><router-link to="/">首页</router-link></li>
           <li><router-link to="/blog">博客</router-link></li>
           <li><router-link to="/about">关于</router-link></li>
         </ul>
       </div>
       <div class="footer-section">
-        <h3>联系方式</h3>
-        <p>
-          <el-icon><Message /></el-icon> Email: contact@zxyspace.com
-        </p>
-        <p>
-          <el-icon><Location /></el-icon> 地址: 北京市朝阳区
-        </p>
+        <h3 class="footer-heading">联系方式</h3>
+        <ul class="footer-links">
+          <li>Email: contact@zxyspace.com</li>
+          <li>地址: 北京市朝阳区</li>
+        </ul>
       </div>
     </div>
     <div class="footer-bottom">
@@ -33,65 +42,120 @@ const currentYear = new Date().getFullYear();
   </footer>
 </template>
 
-<style scoped>
+<style lang="scss" scoped>
 .footer {
-  background-color: #f5f7fa;
-  padding: 40px 0 20px;
-  margin-top: 60px;
+  background-color: var(--background-lighter);
+  padding: var(--spacing-xxl) 0;
+  margin-top: var(--spacing-xxl);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.footer-content {
-  max-width: 1200px;
+.footer-container {
+  max-width: var(--max-width-content);
   margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  padding: 0 20px;
+  padding: 0 var(--spacing-lg);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-xl);
 }
 
 .footer-section {
-  flex: 1;
-  min-width: 250px;
-  margin-bottom: 20px;
+  p {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.6;
+  }
 }
 
-.footer-section h3 {
-  color: #333;
-  margin-bottom: 15px;
-  font-size: 1.2rem;
+.footer-heading {
+  color: var(--primary-color);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-md);
+  position: relative;
+  padding-bottom: var(--spacing-xs);
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background-color: var(--primary-color);
+  }
 }
 
-.footer-section p {
-  color: #666;
-  line-height: 1.6;
-}
-
-.footer-section ul {
+.footer-links {
   list-style: none;
   padding: 0;
+  
+  li {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+    
+    &:hover {
+      color: var(--primary-color);
+    }
+  }
 }
 
-.footer-section ul li {
-  margin-bottom: 8px;
-}
-
-.footer-section a {
-  color: #409EFF;
-  text-decoration: none;
-}
-
-.footer-section a:hover {
-  text-decoration: underline;
+.social-links {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  
+  .social-link {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    transition: all var(--transition-normal);
+    
+    &:hover {
+      background-color: var(--primary-color);
+      color: var(--background-dark);
+      transform: translateY(-3px);
+    }
+    
+    i {
+      font-size: var(--font-size-md);
+    }
+  }
 }
 
 .footer-bottom {
+  max-width: var(--max-width-content);
+  margin: var(--spacing-xl) auto 0;
+  padding: var(--spacing-lg) var(--spacing-lg) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   text-align: center;
-  padding-top: 20px;
-  margin-top: 20px;
-  border-top: 1px solid #e0e0e0;
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
 }
 
-.footer-bottom p {
-  color: #888;
+@media (max-width: 768px) {
+  .footer {
+    padding: var(--spacing-xl) 0;
+  }
+  
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    padding: 0 var(--spacing-md);
+  }
+  
+  .footer-section {
+    margin-bottom: var(--spacing-lg);
+  }
 }
-</style> 
+</style>

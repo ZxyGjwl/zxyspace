@@ -70,4 +70,45 @@ public class Post extends BaseEntity {
     private int views = 0;
 
     private int likes = 0;
+    
+    // 辅助方法：添加标签
+    public void addTag(Tag tag) {
+        tags.add(tag);
+        tag.getPosts().add(this);
+    }
+    
+    // 辅助方法：移除标签
+    public void removeTag(Tag tag) {
+        tags.remove(tag);
+        tag.getPosts().remove(this);
+    }
+    
+    // 辅助方法：添加评论
+    public void addComment(Comment comment) {
+        comments.add(comment);
+        comment.setPost(this);
+    }
+    
+    // 辅助方法：移除评论
+    public void removeComment(Comment comment) {
+        comments.remove(comment);
+        comment.setPost(null);
+    }
+    
+    // 辅助方法：增加浏览量
+    public void incrementViews() {
+        this.views++;
+    }
+    
+    // 辅助方法：点赞
+    public void like() {
+        this.likes++;
+    }
+    
+    // 辅助方法：取消点赞
+    public void unlike() {
+        if (this.likes > 0) {
+            this.likes--;
+        }
+    }
 }

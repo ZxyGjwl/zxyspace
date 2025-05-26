@@ -36,4 +36,25 @@ public class Comment extends BaseEntity {
     private User user;
 
     private int likes = 0;
+    
+    // 点赞方法
+    public void like() {
+        this.likes++;
+    }
+    
+    // 取消点赞方法
+    public void unlike() {
+        if (this.likes > 0) {
+            this.likes--;
+        }
+    }
+    
+    // 手动添加setPost方法，解决Lombok可能的编译问题
+    public void setPost(Post post) {
+        this.post = post;
+    }
+    
+    public Post getPost() {
+        return this.post;
+    }
 }
