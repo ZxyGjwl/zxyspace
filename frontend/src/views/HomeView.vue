@@ -46,12 +46,24 @@
       <div class="feature-card" :class="{ 'slide-in': isVisible }" style="--delay: 0.3s">
         <h2>技术栈</h2>
         <div class="tech-tags">
-          <span class="tag">Vue 3</span>
-          <span class="tag">JavaScript</span>
-          <span class="tag">Node.js</span>
-          <span class="tag">Spring Boot</span>
+          <span class="tag">Python</span>
+          <span class="tag">Java</span>
+          <span class="tag">SpringBoot</span>
+          <span class="tag">Vue</span>
+          <span class="tag">React</span>
           <span class="tag">Docker</span>
-          <span class="tag">AWS</span>
+          <span class="tag">Node.js</span>
+          <span class="tag">云计算</span>
+          <span class="tag">Cursor</span>
+          <span class="tag">MCP</span>
+          <span class="tag">大模型</span>
+          <span class="tag">RAG</span>
+          <span class="tag">lora微调</span>
+          <span class="tag">Deepseek</span>
+          <span class="tag">Qwen</span>
+          <span class="tag">Claude 3.7</span>
+          <span class="tag">Gpt-4o</span>
+          <span class="tag">Git</span>
         </div>
         <div class="card-footer">
           <RouterLink to="/about" class="btn btn-text">查看详情 <span class="arrow">→</span></RouterLink>
@@ -361,6 +373,23 @@ defineExpose({
   flex-wrap: wrap;
   gap: var(--spacing-xs);
   margin: var(--spacing-md) 0;
+  
+  .tag {
+    background-color: rgba(255, 220, 0, 0.1);
+    color: var(--primary-color);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 220, 0, 0.2);
+    
+    &:hover {
+      background-color: rgba(255, 220, 0, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
 }
 
 .loading {

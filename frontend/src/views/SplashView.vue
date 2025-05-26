@@ -1,5 +1,5 @@
 <template>
-  <div class="splash-view" @mousedown="startDrag" @mousemove="dragMove" @mouseup="endDrag" @mouseleave="endDrag">
+  <div class="splash-view" @mousedown="startDrag" @mousemove="handleMouseMove" @mouseup="endDrag" @mouseleave="endDrag">
     <!-- 背景动画效果 -->
     <div class="tech-grid" :style="{ opacity: 1 - dragProgress * 0.5 }"></div>
     <div class="particles">
@@ -11,6 +11,21 @@
             height: `${Math.random() * 3 + 1}px`,
             opacity: `${0.3 - dragProgress * 0.15}`
           }">
+      </div>
+    </div>
+    
+    <!-- 技术栈轮盘 -->
+    <div class="tech-orbit" :style="{ opacity: 1 - dragProgress * 1.2 }">
+      <div 
+        v-for="(tech, index) in techStack" 
+        :key="tech" 
+        class="tech-item"
+        :style="{ 
+          transform: `rotate(${getOrbitPosition(index)}deg) translateX(${orbitRadius}px) rotate(-${getOrbitPosition(index)}deg)`,
+          opacity: getTechOpacity(index)
+        }"
+      >
+        {{ tech }}
       </div>
     </div>
     
@@ -91,6 +106,22 @@ const preloadStarted = ref(false);
 const homeViewLoaded = ref(false);
 const animationStarted = ref(false);
 
+// 鼠标位置跟踪
+const mouseX = ref(window.innerWidth / 2);
+const mouseY = ref(window.innerHeight / 2);
+const orbitRotation = ref(0);
+const orbitRadius = 180; // 轮盘半径
+const orbitSpeed = 0.05; // 轮盘旋转速度
+let orbitAnimationFrame = null;
+
+// 技术栈
+const techStack = [
+  'Python', 'Java', 'SpringBoot', 'Vue', 'React', 
+  'Docker', 'Node.js', '域名', '云计算', 'Cursor', 
+  'MCP', '大模型', 'RAG', 'lora微调', 'Deepseek', 
+  'Qwen', 'Claude 3.7', 'Gpt-4o', 'Git'
+];
+
 // 中英文标语
 const chineseSlogan = '生活就是不断学习和挑战'.split('');
 const englishSlogan = 'LIFE IS CONTINUOUS LEARNING AND CHALLENGE'.split(' ');
@@ -107,6 +138,52 @@ const initWordVisibility = () => {
   englishSlogan.forEach((_, index) => {
     wordVisibility[`en-${index}`] = false;
   });
+};
+
+// 处理鼠标移动
+const handleMouseMove = (e) => {
+  // 更新鼠标位置
+  mouseX.value = e.clientX;
+  mouseY.value = e.clientY;
+  
+  // 如果正在拖动，调用拖动处理函数
+  if (isDragging.value) {
+    dragMove(e);
+  }
+};
+
+// 计算轮盘中每个技术项的位置
+const getOrbitPosition = (index) => {
+  const baseAngle = (index * (360 / techStack.length));
+  return (baseAngle + orbitRotation.value) % 360;
+};
+
+// 计算技术项的透明度，使前方的项目更加突出
+const getTechOpacity = (index) => {
+  const position = getOrbitPosition(index);
+  // 前方位置（0度附近）透明度最高
+  return 0.3 + 0.7 * Math.cos((position - 90) * Math.PI / 180);
+};
+
+// 更新轮盘旋转
+const updateOrbit = () => {
+  // 根据鼠标位置计算旋转速度和方向
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
+  const deltaX = mouseX.value - centerX;
+  const deltaY = mouseY.value - centerY;
+  
+  // 计算鼠标到中心的距离，影响旋转速度
+  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+  const maxDistance = Math.max(window.innerWidth, window.innerHeight) / 2;
+  const speedFactor = Math.min(distance / maxDistance, 1) * orbitSpeed;
+  
+  // 根据鼠标位置计算旋转方向
+  const angle = Math.atan2(deltaY, deltaX);
+  orbitRotation.value += speedFactor * 5;
+  
+  // 循环动画
+  orbitAnimationFrame = requestAnimationFrame(updateOrbit);
 };
 
 // 预加载HomeView内容
@@ -365,6 +442,9 @@ onMounted(() => {
   
   // 页面加载后开始文字动画
   setTimeout(showWordsSequentially, 100);
+  
+  // 开始轮盘动画
+  updateOrbit();
 });
 
 onUnmounted(() => {
@@ -372,6 +452,11 @@ onUnmounted(() => {
   document.removeEventListener('touchstart', startDrag);
   document.removeEventListener('touchmove', dragMove);
   document.removeEventListener('touchend', endDrag);
+  
+  // 取消轮盘动画
+  if (orbitAnimationFrame) {
+    cancelAnimationFrame(orbitAnimationFrame);
+  }
 });
 </script>
 
@@ -431,6 +516,34 @@ body {
   opacity: 0.3;
   box-shadow: 0 0 8px rgba(255, 220, 0, 0.4);
   transition: opacity 0.3s ease;
+}
+
+/* 技术栈轮盘 */
+.tech-orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  pointer-events: none; /* 确保不会干扰拖拽操作 */
+}
+
+.tech-item {
+  position: absolute;
+  transform-origin: center;
+  background-color: rgba(255, 220, 0, 0.1);
+  color: var(--primary-color);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 0 15px rgba(255, 220, 0, 0.2);
+  border: 1px solid rgba(255, 220, 0, 0.2);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  will-change: transform, opacity;
 }
 
 /* 标语容器 */
@@ -628,6 +741,11 @@ body {
   
   .slogan-english {
     font-size: 0.9rem;
+  }
+  
+  .tech-item {
+    font-size: 12px;
+    padding: 6px 12px;
   }
 }
 </style>
