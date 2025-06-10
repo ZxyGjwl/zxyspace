@@ -1,18 +1,7 @@
 <template>
-  <div class="splash-view" @mousedown="startDrag" @mousemove="handleMouseMove" @mouseup="endDrag" @mouseleave="endDrag">
+  <div class="splash-view">
     <!-- 背景动画效果 -->
     <div class="tech-grid" :style="{ opacity: 1 - dragProgress * 0.5 }"></div>
-    <div class="particles">
-      <div v-for="n in 30" :key="n" class="particle" 
-          :style="{ 
-            top: `${Math.random() * 100 - dragProgress * (n % 5) * 5}%`, 
-            left: `${Math.random() * 100 + dragProgress * (n % 3) * 3}%`,
-            width: `${Math.random() * 3 + 1}px`,
-            height: `${Math.random() * 3 + 1}px`,
-            opacity: `${0.3 - dragProgress * 0.15}`
-          }">
-      </div>
-    </div>
     
     <!-- 技术栈轮盘 -->
     <div class="tech-orbit" :style="{ opacity: 1 - dragProgress * 1.2 }">
@@ -32,7 +21,7 @@
     <!-- 主标语 -->
     <div class="slogan-container" :style="{ transform: `translateY(${-dragProgress * 40}vh)`, opacity: 1 - dragProgress * 1.2 }">
       <div class="logo-container">
-        <h1 class="logo">ZXY <span>Space</span></h1>
+        <h1 class="logo cyberpunk-text">Zxy <span>Space</span></h1>
       </div>
       
       <div class="slogan">
@@ -62,57 +51,53 @@
       </div>
     </div>
     
-    <!-- 上拉提示 -->
-    <div class="drag-hint" :style="{ opacity: Math.max(0, 1 - dragProgress * 2), transform: `translateY(${dragProgress * 20}px)` }">
-      <div class="drag-text">向上拖动进入</div>
-      <div class="drag-arrow">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- 点击进入按钮 -->
+    <div class="click-button" @click="handleClick" :style="{ 
+      opacity: Math.max(0, 1 - dragProgress * 2),
+      transform: `translateY(${-dragProgress * 40}vh)`
+    }">
+      <div class="click-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 5L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           <path d="M5 12L12 5L19 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
     </div>
     
-    <!-- 预览内容 -->
-    <div class="home-preview" :class="{ 'transitioning': transitionActive }" :style="{ transform: `translate3d(0, ${100 - dragProgress * 100}vh, 0)` }">
-      <div class="home-preview-container">
-        <HomeView ref="homeViewRef" />
-      </div>
-    </div>
-    
-    <!-- 进度指示器 -->
-    <div class="progress-indicator" :style="{ opacity: 0.3 + dragProgress * 0.7 }">
-      <div class="progress-bar">
-        <div class="progress-fill" :style="{ width: `${dragProgress * 100}%` }"></div>
-      </div>
-      <div class="progress-text">{{ Math.floor(dragProgress * 100) }}%</div>
-    </div>
+    <!-- 使用公共的条带过渡组件 -->
+    <StripeTransition 
+      :active="transitionActive" 
+      :visible="transitionActive"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, shallowRef, nextTick, reactive } from 'vue';
-import { useRouter } from 'vue-router';
-import HomeView from './HomeView.vue';
+import { useRouter, useRoute } from 'vue-router';
+import StripeTransition from '../components/common/StripeTransition.vue';
+import { PerformanceMonitor } from '../utils/performanceMonitor.js';
 
 const router = useRouter();
-const isDragging = ref(false);
-const startY = ref(0);
-const dragY = ref(0);
+const route = useRoute();
 const dragProgress = ref(0);
 const transitionActive = ref(false);
 const homeViewRef = shallowRef(null);
 const preloadStarted = ref(false);
 const homeViewLoaded = ref(false);
 const animationStarted = ref(false);
+const homePreviewVisible = ref(false);
+const stripePhase = ref('none'); // 'covering', 'revealing', 'none'
 
 // 鼠标位置跟踪
 const mouseX = ref(window.innerWidth / 2);
 const mouseY = ref(window.innerHeight / 2);
 const orbitRotation = ref(0);
 const orbitRadius = 180; // 轮盘半径
-const orbitSpeed = 0.05; // 轮盘旋转速度
+const orbitSpeed = 0.3; // 增加轮盘旋转速度，使旋转效果更明显
 let orbitAnimationFrame = null;
+let lastUpdateTime = 0; // 添加时间控制变量
+const updateInterval = 1000 / 30; // 限制更新频率为30fps
 
 // 技术栈
 const techStack = [
@@ -140,18 +125,6 @@ const initWordVisibility = () => {
   });
 };
 
-// 处理鼠标移动
-const handleMouseMove = (e) => {
-  // 更新鼠标位置
-  mouseX.value = e.clientX;
-  mouseY.value = e.clientY;
-  
-  // 如果正在拖动，调用拖动处理函数
-  if (isDragging.value) {
-    dragMove(e);
-  }
-};
-
 // 计算轮盘中每个技术项的位置
 const getOrbitPosition = (index) => {
   const baseAngle = (index * (360 / techStack.length));
@@ -167,22 +140,18 @@ const getTechOpacity = (index) => {
 
 // 更新轮盘旋转
 const updateOrbit = () => {
-  // 根据鼠标位置计算旋转速度和方向
-  const centerX = window.innerWidth / 2;
-  const centerY = window.innerHeight / 2;
-  const deltaX = mouseX.value - centerX;
-  const deltaY = mouseY.value - centerY;
+  // 使用时间间隔控制更新频率
+  const currentTime = performance.now();
+  if (currentTime - lastUpdateTime < updateInterval) {
+    orbitAnimationFrame = requestAnimationFrame(updateOrbit);
+    return;
+  }
+  lastUpdateTime = currentTime;
+
+  // 匀速旋转，不受鼠标位置影响
+  orbitRotation.value = (orbitRotation.value + orbitSpeed) % 360;
   
-  // 计算鼠标到中心的距离，影响旋转速度
-  const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-  const maxDistance = Math.max(window.innerWidth, window.innerHeight) / 2;
-  const speedFactor = Math.min(distance / maxDistance, 1) * orbitSpeed;
-  
-  // 根据鼠标位置计算旋转方向
-  const angle = Math.atan2(deltaY, deltaX);
-  orbitRotation.value += speedFactor * 5;
-  
-  // 循环动画
+  // 使用 requestAnimationFrame 的返回值，便于后续取消
   orbitAnimationFrame = requestAnimationFrame(updateOrbit);
 };
 
@@ -191,7 +160,7 @@ const preloadHomeViewContent = () => {
   if (preloadStarted.value) return;
   preloadStarted.value = true;
   
-  // 当用户开始拖动时就预加载数据
+  // 预加载数据
   nextTick(() => {
     if (homeViewRef.value && homeViewRef.value.preloadData) {
       homeViewRef.value.preloadData().then(() => {
@@ -202,193 +171,52 @@ const preloadHomeViewContent = () => {
   });
 };
 
-// 更强的缓动效果，用于标语移动
-function easeOutExpo(x) {
-  return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
-}
-
-// 线性函数，用于直接映射拖动距离
-function linear(x) {
-  return x;
-}
-
-// 轻微的缓动效果，保持一定的平滑度但不会明显延迟
-function easeOutLight(x) {
-  return 1 - Math.pow(1 - x, 1.5); // 使用较小的指数，减弱缓动效果
-}
-
-// 处理拖拽开始
-const startDrag = (e) => {
-  isDragging.value = true;
-  startY.value = e.clientY || e.touches?.[0]?.clientY || 0;
-  transitionActive.value = false;
+// 处理点击事件
+const handleClick = () => {
+  if (transitionActive.value) return; // 防止重复点击
   
-  // 触发浏览器渲染层的分离，优化性能
-  const homePreview = document.querySelector('.home-preview');
-  if (homePreview) {
-    homePreview.style.willChange = 'transform';
-    // 添加GPU加速
-    homePreview.style.transform = `translate3d(0, ${100 - dragProgress.value * 100}vh, 0)`;
-  }
-  
-  // 开始拖动时就预加载HomeView内容
+  // 开始预加载
   preloadHomeViewContent();
+  
+  // 开始条带过渡动画
+  startStripeTransition();
 };
 
-// 处理拖拽移动
-const dragMove = (e) => {
-  if (!isDragging.value) return;
+// 开始条带过渡动画
+const startStripeTransition = () => {
+  transitionActive.value = true;
+  stripePhase.value = 'covering';
   
-  // 使用requestAnimationFrame优化渲染性能
-  window.requestAnimationFrame(() => {
-    // 计算拖拽距离
-    const currentY = e.clientY || e.touches?.[0]?.clientY || 0;
-    dragY.value = startY.value - currentY;
-    
-    // 计算拖拽进度，使用屏幕高度的一半作为完整拖动距离
-    const rawProgress = dragY.value / (window.innerHeight * 0.5);
-    
-    // 使用线性映射或轻微缓动，确保界面与手指同步
-    const progress = Math.max(0, Math.min(1, rawProgress));
-    dragProgress.value = easeOutLight(progress); // 使用轻微缓动，保持一定的平滑度
-    
-    // 当拖动超过10%时就预加载内容，更早地开始加载
-    if (progress > 0.1 && !preloadStarted.value) {
-      preloadHomeViewContent();
-    }
-    
-    // 当到达临界点时自动进入主页
-    if (progress > 0.5 && !transitionActive.value) { // 提高阈值，让用户有更多控制感
-      completeTransition();
-    }
-  });
-};
-
-// 处理拖拽结束
-const endDrag = () => {
-  if (!isDragging.value) return;
-  isDragging.value = false;
-  
-  // 恢复默认
-  const homePreview = document.querySelector('.home-preview');
-  if (homePreview) {
-    homePreview.style.willChange = 'auto';
+  // 开发环境下监测动画性能
+  if (import.meta.env.MODE === 'development') {
+    PerformanceMonitor.monitorTransition(null, 1000).then(result => {
+      console.log('条带过渡动画性能报告:', result);
+    });
   }
   
-  // 判断是否需要完成过渡或者恢复
-  if (dragProgress.value > 0.5) { // 与dragMove中的阈值保持一致
-    completeTransition();
-  } else {
-    resetTransition();
-  }
+  // 条带覆盖完成后立即跳转到主页
+  // 优化后动画：0.35s动画 + 0.15s最后一个条带延迟 = 0.5s，精确控制跳转时机
+  setTimeout(() => {
+    jumpToHome();
+  }, 520); // 减少到520ms，确保在条带完全覆盖后立即跳转，避免延迟过长
 };
 
 // 完成过渡并跳转到主页
 const completeTransition = () => {
-  // 如果还没预加载，现在预加载
-  if (!preloadStarted.value) {
-    preloadHomeViewContent();
-  }
-  
-  transitionActive.value = true;
-  
-  // 使用更平滑的动画曲线
-  document.documentElement.style.setProperty('--drag-transition', '0.5s');
-  document.documentElement.style.setProperty('--drag-timing-function', 'cubic-bezier(0.22, 1, 0.36, 1)');
-  
-  // 平滑地将进度设为1
-  const startProgress = dragProgress.value;
-  const startTime = performance.now();
-  const duration = 500; // 500ms动画，保持适中的速度
-  
-  // 在动画开始前先确保HomeView可见
-  if (homeViewRef.value && homeViewRef.value.setVisible) {
-    homeViewRef.value.setVisible(true);
-  }
-  
-  // 提前应用一些样式优化过渡
-  const homePreview = document.querySelector('.home-preview');
-  if (homePreview) {
-    homePreview.style.willChange = 'transform';
-    // 添加GPU加速
-    homePreview.style.transform = `translate3d(0, ${100 - dragProgress.value * 100}vh, 0)`;
-  }
-  
-  const animateProgress = (currentTime) => {
-    const elapsed = currentTime - startTime;
-    if (elapsed < duration) {
-      const t = elapsed / duration;
-      // 使用easeOutLight缓动函数，与拖动时的效果一致
-      const easedT = easeOutLight(t);
-      dragProgress.value = startProgress + (1 - startProgress) * easedT;
-      requestAnimationFrame(animateProgress);
-    } else {
-      dragProgress.value = 1;
-      
-      // 预缓存路由组件数据，提前准备好资源
-      router.isReady().then(() => {
-        // 确保HomeView已完全加载后再跳转
-        if (homeViewLoaded.value) {
-          // 延迟一点点再跳转，确保过渡动画完成
-          setTimeout(() => {
-            router.push({ 
-              path: '/home',
-              // 添加路由元数据，标记为从splash过来，跳过进入动画
-              query: { fromSplash: 'true' }
-            });
-          }, 50);
-        } else {
-          // 如果HomeView还未加载完成，等待它加载完成
-          const checkLoaded = setInterval(() => {
-            if (homeViewLoaded.value) {
-              clearInterval(checkLoaded);
-              router.push({ 
-                path: '/home',
-                query: { fromSplash: 'true' }
-              });
-            }
-          }, 50);
-        }
-      });
-    }
-  };
-  
-  requestAnimationFrame(animateProgress);
+  // 此函数现在由 startStripeTransition 替代
+  startStripeTransition();
 };
 
-// 重置过渡动画
-const resetTransition = () => {
-  transitionActive.value = true;
-  
-  // 添加动画过渡，使用更自然的曲线
-  document.documentElement.style.setProperty('--drag-transition', '0.3s');
-  document.documentElement.style.setProperty('--drag-timing-function', 'cubic-bezier(0.22, 1, 0.36, 1)');
-  
-  // 平滑地将进度设为0
-  const startProgress = dragProgress.value;
-  const startTime = performance.now();
-  const duration = 300; // 300ms动画，更快的恢复速度
-  
-  const animateProgress = (currentTime) => {
-    const elapsed = currentTime - startTime;
-    if (elapsed < duration) {
-      const t = elapsed / duration;
-      // 使用easeOutLight缓动函数，与拖动时的效果一致
-      const easedT = easeOutLight(t);
-      dragProgress.value = startProgress - startProgress * easedT;
-      requestAnimationFrame(animateProgress);
-    } else {
-      dragProgress.value = 0;
-      
-      // 重置后移除动画过渡
-      setTimeout(() => {
-        document.documentElement.style.setProperty('--drag-transition', '0s');
-        transitionActive.value = false;
-      }, 300);
+// 跳转到主页的函数
+const jumpToHome = () => {
+  // 跳转到主页，传递条带动画状态
+  router.push({ 
+    path: '/home',
+    query: { 
+      fromSplash: 'true',
+      showStripeReveal: 'true' // 告诉主页展示条带消失动画
     }
-  };
-  
-  requestAnimationFrame(animateProgress);
+  });
 };
 
 // 逐个显示文字的函数
@@ -415,26 +243,34 @@ const showWordsSequentially = () => {
   });
 };
 
-// 处理触摸事件
 onMounted(() => {
+  // 检查是否需要淡入效果
+  if (route.query.fadeIn === 'true') {
+    // 从home页面跳转过来，需要淡入效果
+    const splashElement = document.querySelector('.splash-view');
+    if (splashElement) {
+      splashElement.style.opacity = '0';
+      splashElement.style.transition = 'opacity 0.6s ease-in';
+      
+      // 短暂延迟后开始淡入
+      setTimeout(() => {
+        splashElement.style.opacity = '1';
+      }, 100);
+    }
+    
+    // 清理查询参数
+    router.replace({ path: '/', query: {} });
+  }
+  
   // 初始化所有文字为不可见
   initWordVisibility();
-  
-  // 设置初始动画过渡状态
-  document.documentElement.style.setProperty('--drag-transition', '0s');
-  document.documentElement.style.setProperty('--drag-timing-function', 'cubic-bezier(0.22, 1, 0.36, 1)');
-  
-  // 添加触摸事件监听
-  document.addEventListener('touchstart', startDrag, { passive: true });
-  document.addEventListener('touchmove', dragMove, { passive: true });
-  document.addEventListener('touchend', endDrag);
   
   // 预渲染HomeView，提前加载资源
   router.isReady().then(() => {
     // 预热路由组件
     router.resolve('/home');
     
-    // 页面加载后预加载HomeView内容（延迟执行，不阻塞主页面加载）
+    // 页面加载后预加载HomeView内容
     setTimeout(() => {
       preloadHomeViewContent();
     }, 800);
@@ -444,15 +280,11 @@ onMounted(() => {
   setTimeout(showWordsSequentially, 100);
   
   // 开始轮盘动画
+  lastUpdateTime = performance.now(); // 初始化时间戳
   updateOrbit();
 });
 
 onUnmounted(() => {
-  // 移除触摸事件监听
-  document.removeEventListener('touchstart', startDrag);
-  document.removeEventListener('touchmove', dragMove);
-  document.removeEventListener('touchend', endDrag);
-  
   // 取消轮盘动画
   if (orbitAnimationFrame) {
     cancelAnimationFrame(orbitAnimationFrame);
@@ -474,11 +306,11 @@ onUnmounted(() => {
   align-items: center;
   background-color: var(--background-dark);
   z-index: 1000;
-  cursor: ns-resize; /* 指示可拖动 */
   user-select: none; /* 禁止文本选择 */
   -webkit-user-select: none; /* Safari */
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* IE10+/Edge */
+  font-weight: bold; /* 加粗所有文本 */
 }
 
 /* 阻止默认滚动行为 */
@@ -498,24 +330,6 @@ body {
     linear-gradient(90deg, rgba(255, 220, 0, 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
   z-index: -1;
-}
-
-.particles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-}
-
-.particle {
-  position: absolute;
-  background-color: var(--primary-color);
-  border-radius: 50%;
-  opacity: 0.3;
-  box-shadow: 0 0 8px rgba(255, 220, 0, 0.4);
-  transition: opacity 0.3s ease;
 }
 
 /* 技术栈轮盘 */
@@ -542,8 +356,10 @@ body {
   white-space: nowrap;
   box-shadow: 0 0 15px rgba(255, 220, 0, 0.2);
   border: 1px solid rgba(255, 220, 0, 0.2);
-  transition: opacity 0.3s ease, transform 0.3s ease;
   will-change: transform, opacity;
+  backface-visibility: hidden; /* 减少绘制 */
+  transform-style: preserve-3d; /* 启用3D加速 */
+  -webkit-font-smoothing: antialiased; /* 字体渲染优化 */
 }
 
 /* 标语容器 */
@@ -553,23 +369,25 @@ body {
   align-items: center;
   gap: var(--spacing-xl);
   padding: var(--spacing-xl);
-  transition: transform 0.1s linear,
-              opacity 0.1s linear;
   will-change: transform, opacity;
 }
 
 .logo-container {
   margin-bottom: var(--spacing-lg);
+  position: relative;
 }
 
 .logo {
-  font-size: 3rem;
-  font-weight: var(--font-weight-bold);
+  font-size: 4.5rem; /* 放大字体大小 */
+  font-weight: 900; /* 更粗的字体 */
+  font-style: italic; /* logo斜体 */
   color: var(--primary-color);
   letter-spacing: -0.02em;
+  position: relative;
   
   span {
-    font-weight: var(--font-weight-normal);
+    font-weight: 800;
+    font-style: italic; /* logo span斜体 */
     opacity: 0.9;
   }
 }
@@ -600,139 +418,257 @@ body {
   display: inline-block;
   margin: 0 2px;
   color: var(--text-primary);
+  font-style: italic; /* 标语文字斜体 */
   opacity: 0; /* 默认不可见 */
-  transform: translateY(20px);
+  transform: translateY(20px); /* 移除斜体效果 */
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
               opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform, opacity;
   
   &.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0); /* 移除斜体效果 */
   }
 }
 
-/* 拖动提示 */
-.drag-hint {
+/* 点击按钮 */
+.click-button {
   position: absolute;
-  bottom: 80px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--spacing-sm);
-  transition: opacity 0.1s linear,
-              transform 0.1s linear;
-  will-change: opacity, transform;
-}
-
-.drag-text {
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
-  margin-bottom: var(--spacing-xs);
-}
-
-.drag-arrow {
-  color: var(--primary-color);
-  animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-10px);
-  }
-  60% {
-    transform: translateY(-5px);
-  }
-}
-
-/* 主页预览 */
-.home-preview {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  background-color: var(--background-dark);
-  transform: translate3d(0, 100vh, 0);
-  transition: transform 0.1s linear;
-  will-change: transform;
-  z-index: 10;
-  
-  &.transitioning {
-    transition: transform var(--drag-transition, 0.5s) var(--drag-timing-function, cubic-bezier(0.22, 1, 0.36, 1));
-  }
-}
-
-.home-preview-container {
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  padding-top: var(--header-height); /* 为顶部导航栏留出空间 */
-  box-sizing: border-box;
-  
-  /* 确保内容区域与实际主页布局一致 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  
-  /* 给 HomeView 组件添加与主页相同的布局约束 */
-  :deep(.home) {
-    max-width: var(--max-width-content);
-    width: 100%;
-    padding: var(--spacing-xl) var(--spacing-lg);
-    box-sizing: border-box;
-    margin: 0 auto;
-  }
-  
-  /* 适应不同屏幕尺寸 */
-  @media (max-width: 768px) {
-    :deep(.home) {
-      padding: var(--spacing-lg) var(--spacing-md);
-    }
-  }
-}
-
-/* 进度指示器 */
-.progress-indicator {
-  position: absolute;
-  bottom: 40px;
+  bottom: 100px;
   left: 50%;
   transform: translateX(-50%);
+  width: 80px;
+  height: 80px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--spacing-xs);
-  transition: opacity 0.1s linear;
-  will-change: opacity;
+  justify-content: center;
+  background: rgba(255, 220, 0, 0.1);
+  border-radius: 50%;
+  will-change: opacity, transform;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 
+    0 0 20px rgba(255, 220, 0, 0.3),
+    0 0 40px rgba(255, 220, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
+  &:hover {
+    transform: translateX(-50%) scale(1.3);
+    background: rgba(255, 220, 0, 0.3);
+    box-shadow: 
+      0 0 60px rgba(255, 220, 0, 0.8),
+      0 0 120px rgba(255, 220, 0, 0.4),
+      0 0 180px rgba(255, 220, 0, 0.2),
+      inset 0 0 40px rgba(255, 220, 0, 0.2);
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+  
+  &:active {
+    transform: translateX(-50%) scale(1.1);
+    box-shadow: 
+      0 0 40px rgba(255, 220, 0, 0.9),
+      0 0 80px rgba(255, 220, 0, 0.5),
+      inset 0 0 30px rgba(255, 220, 0, 0.3);
+  }
 }
 
-.progress-bar {
-  width: 100px;
-  height: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-  overflow: hidden;
+.click-icon {
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  filter: drop-shadow(0 0 8px rgba(255, 220, 0, 0.3));
 }
 
-.progress-fill {
-  height: 100%;
-  background-color: var(--primary-color);
-  border-radius: 2px;
-  transition: width 0.05s linear;
+.click-button:hover .click-icon {
+  color: rgba(255, 255, 255, 0.95);
+  transform: translateY(-5px) rotate(15deg);
+  filter: drop-shadow(0 0 20px rgba(255, 220, 0, 0.8));
+  animation: iconBounce 1.5s infinite ease-in-out;
 }
 
-.progress-text {
-  font-size: var(--font-size-xs);
-  color: var(--text-secondary);
+/* 脉冲动画 */
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 60px rgba(255, 220, 0, 0.8),
+      0 0 120px rgba(255, 220, 0, 0.4),
+      0 0 180px rgba(255, 220, 0, 0.2),
+      inset 0 0 40px rgba(255, 220, 0, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 0 80px rgba(255, 220, 0, 1),
+      0 0 160px rgba(255, 220, 0, 0.6),
+      0 0 240px rgba(255, 220, 0, 0.3),
+      inset 0 0 60px rgba(255, 220, 0, 0.3);
+  }
+}
+
+/* 图标弹跳动画 */
+@keyframes iconBounce {
+  0%, 100% {
+    transform: translateY(-5px) rotate(15deg) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) rotate(15deg) scale(1.1);
+  }
+}
+
+/* 撕裂效果替代阴影 */
+.cyberpunk-text {
+  position: relative;
+  animation: textGlitch 8s infinite alternate;
+  
+  &::before, &::after {
+    content: 'Zxy Space';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 33%, 
+      70% 33%, 75% 38%, 100% 38%, 
+      100% 65%, 55% 65%, 60% 72%, 
+      100% 72%, 100% 100%, 0% 100%
+    );
+  }
+  
+  &::before {
+    color: #0ff;
+    z-index: -1;
+    left: -3px;
+    animation: crack-anim-1 5s infinite linear alternate-reverse;
+  }
+  
+  &::after {
+    color: #f0f;
+    z-index: -2;
+    left: 3px;
+    animation: crack-anim-2 3s infinite linear alternate-reverse;
+  }
+}
+
+@keyframes textGlitch {
+  0%, 5%, 10%, 15%, 50%, 55%, 60%, 100% {
+    opacity: 1;
+    filter: brightness(1);
+    transform: translateY(0) scale(1);
+  }
+  
+  1%, 6%, 11%, 51%, 56% {
+    opacity: 0.8;
+    filter: brightness(1.5) contrast(1.5);
+    transform: translateY(-1px) scale(1.01);
+  }
+  
+  2%, 7%, 12%, 52%, 57% {
+    filter: brightness(0.9) contrast(1.2);
+    transform: translateY(1px) scale(0.99);
+  }
+}
+
+@keyframes crack-anim-1 {
+  0%, 100% { 
+    transform: translate(0);
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 33%, 
+      70% 33%, 75% 38%, 100% 38%, 
+      100% 65%, 55% 65%, 60% 72%, 
+      100% 72%, 100% 100%, 0% 100%
+    );
+  }
+  
+  20%, 80% {
+    transform: translate(-2px, 1px);
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 25%, 
+      75% 25%, 80% 30%, 100% 30%, 
+      100% 70%, 60% 70%, 65% 75%, 
+      100% 75%, 100% 100%, 0% 100%
+    );
+  }
+  
+  40%, 60% {
+    transform: translate(2px, -1px);
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 40%, 
+      65% 40%, 70% 45%, 100% 45%, 
+      100% 60%, 50% 60%, 55% 65%, 
+      100% 65%, 100% 100%, 0% 100%
+    );
+  }
+}
+
+@keyframes crack-anim-2 {
+  0%, 100% { 
+    transform: translate(0);
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 45%, 
+      60% 45%, 65% 50%, 100% 50%, 
+      100% 75%, 40% 75%, 45% 80%, 
+      100% 80%, 100% 100%, 0% 100%
+    );
+  }
+  
+  25%, 75% {
+    transform: translate(2px, -1px);
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 35%, 
+      65% 35%, 70% 40%, 100% 40%, 
+      100% 80%, 45% 80%, 50% 85%, 
+      100% 85%, 100% 100%, 0% 100%
+    );
+  }
+  
+  50% {
+    transform: translate(-2px, 1px);
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 55%, 
+      55% 55%, 60% 60%, 100% 60%, 
+      100% 70%, 35% 70%, 40% 75%, 
+      100% 75%, 100% 100%, 0% 100%
+    );
+  }
+}
+
+/* 赛博朋克闪烁效果 */
+@keyframes cyberGlitch {
+  0%, 100% {
+    opacity: 0.8;
+    filter: hue-rotate(0deg);
+  }
+  25% {
+    opacity: 0.6;
+    filter: hue-rotate(90deg);
+  }
+  50% {
+    opacity: 1;
+    filter: hue-rotate(180deg);
+  }
+  75% {
+    opacity: 0.7;
+    filter: hue-rotate(270deg);
+  }
+}
+
+/* 数字雨动画 */
+@keyframes digitalRain {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(20px);
+  }
 }
 
 /* 响应式调整 */
 @media (max-width: 768px) {
   .logo {
-    font-size: 2.5rem;
+    font-size: 3.5rem; /* 调整移动端大小 */
   }
   
   .slogan-chinese {

@@ -1,15 +1,22 @@
 <script setup>
-import AppHeader from './AppHeader.vue';
-import AppFooter from './AppFooter.vue';
 import { useRoute } from 'vue-router';
 import { ref, watch, computed } from 'vue';
 
 const route = useRoute();
 const previousRoute = ref(null);
+const showTransitionBar = ref(false);
 
 // 检查是否从 SplashView 过来
 const isFromSplash = computed(() => {
   return route.query.fromSplash === 'true';
+});
+
+// 检查是否在主页且显示过渡动画
+const isHomeWithTransition = computed(() => {
+  return route.path === '/home' && (
+    route.query.showStripeReveal === 'true' || 
+    route.query.fromSplash === 'true'
+  );
 });
 
 // 过渡动画钩子函数
@@ -54,20 +61,27 @@ const afterEnter = (el) => {
 watch(() => route.path, (newPath, oldPath) => {
   previousRoute.value = oldPath;
 }, { immediate: true });
+
+// 监听路由变化，触发黄色条带动画
+watch(route, (to, from) => {
+  if (to.name === 'About' && from.name === 'Home') {
+    showTransitionBar.value = true;
+    setTimeout(() => {
+      showTransitionBar.value = false;
+    }, 800);
+  }
+});
 </script>
 
 <template>
-  <div class="app-container">
-    <div class="page-background">
-      <div class="tech-background"></div>
-      <div class="particles"></div>
-    </div>
+  <div id="app-layout" class="app-layout">
+    <!-- 黄色条带动画 -->
+    <div class="transition-bar" :class="{ 'bar-animate': showTransitionBar }"></div>
     
-    <AppHeader />
-    
-    <main class="main-content">
+    <main class="main-content full-viewport">
       <router-view v-slot="{ Component, route }">
         <transition 
+          v-if="!route.meta.diagonalTransition"
           :name="(route.meta.skipTransition || isFromSplash) ? 'none' : 'page'" 
           :mode="(route.meta.skipTransition || isFromSplash) ? '' : 'out-in'"
           @before-enter="beforeEnter" 
@@ -76,10 +90,9 @@ watch(() => route.path, (newPath, oldPath) => {
         >
           <component :is="Component" />
         </transition>
+        <component v-else :is="Component" />
       </router-view>
     </main>
-    
-    <AppFooter />
   </div>
 </template>
 
@@ -94,13 +107,20 @@ watch(() => route.path, (newPath, oldPath) => {
 
 .main-content {
   flex: 1;
-  margin-top: var(--header-height);
-  padding: var(--spacing-xl) var(--spacing-lg);
-  max-width: var(--max-width-content);
-  width: 100%;
-  margin-left: auto;
-  margin-right: auto;
   position: relative;
+  
+  &.full-viewport {
+    margin-top: 0;
+    padding: 0;
+    max-width: 100%;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+  }
 }
 
 /* 页面过渡动画 */
@@ -133,10 +153,52 @@ watch(() => route.path, (newPath, oldPath) => {
   opacity: 1;
 }
 
-// 适应不同屏幕尺寸
-@media (max-width: 768px) {
-  .main-content {
-    padding: var(--spacing-lg) var(--spacing-md);
+/* 黄色条带动画 */
+.transition-bar {
+  position: fixed;
+  top: 0;
+  right: 100%;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), #ffd700);
+  z-index: 9999;
+  transition: none;
+}
+
+.transition-bar.bar-animate {
+  animation: slideBarLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes slideBarLeft {
+  0% {
+    right: 100%;
   }
+  50% {
+    right: -10%;
+    width: 110%;
+  }
+  100% {
+    right: -100%;
+    width: 100%;
+  }
+}
+
+/* About 页面专用过渡动画 */
+.page-enter-active {
+  transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.page-leave-active {
+  transition: all 0.3s ease;
+}
+
+.page-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.page-leave-to {
+  transform: translateX(-50px);
+  opacity: 0;
 }
 </style> 

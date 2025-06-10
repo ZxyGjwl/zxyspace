@@ -1,5 +1,8 @@
 <template>
   <div class="blog">
+    <!-- 左上角 Logo -->
+    <AppLogo :fixed="true" routeTo="/home" />
+    
     <h1>博客文章</h1>
     
     <div class="filters">
@@ -81,6 +84,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import AppLogo from '../components/common/AppLogo.vue'
+import { formatDate, mockPosts, getCategories } from '../utils/common.js'
 
 const router = useRouter()
 
@@ -92,65 +97,7 @@ const selectedCategory = ref('')
 const currentPage = ref(1)
 const totalPages = ref(1)
 
-// 模拟数据 - 实际应用中应从后端API获取
-const mockPosts = [
-  {
-    id: 1,
-    title: '如何使用Vue3构建现代化前端应用',
-    excerpt: 'Vue3带来了许多新特性，包括Composition API、Teleport、Fragments等...',
-    createdAt: '2023-04-15T10:30:00',
-    category: '前端开发',
-    author: '张三',
-    coverImage: 'https://picsum.photos/id/0/600/400'
-  },
-  {
-    id: 2,
-    title: 'Spring Boot最佳实践',
-    excerpt: '本文将介绍Spring Boot开发中的一些常见问题和解决方案...',
-    createdAt: '2023-04-10T14:20:00',
-    category: '后端开发',
-    author: '李四',
-    coverImage: 'https://picsum.photos/id/1/600/400'
-  },
-  {
-    id: 3,
-    title: '我的旅行日记：杭州西湖',
-    excerpt: '上周末去了杭州，游览了风景如画的西湖，体验了当地的文化和美食...',
-    createdAt: '2023-04-05T08:15:00',
-    category: '生活随笔',
-    author: '王五',
-    coverImage: 'https://picsum.photos/id/26/600/400'
-  },
-  {
-    id: 4,
-    title: 'Docker入门指南',
-    excerpt: 'Docker可以让开发者打包他们的应用以及依赖包到一个轻量级、可移植的容器中...',
-    createdAt: '2023-03-28T16:45:00',
-    category: '运维',
-    author: '赵六',
-    coverImage: 'https://picsum.photos/id/60/600/400'
-  },
-  {
-    id: 5,
-    title: 'JavaScript异步编程详解',
-    excerpt: '从回调函数到Promise，再到async/await，JavaScript的异步编程模式经历了怎样的演变...',
-    createdAt: '2023-03-20T09:00:00',
-    category: '前端开发',
-    author: '张三',
-    coverImage: 'https://picsum.photos/id/3/600/400'
-  },
-  {
-    id: 6,
-    title: '数据结构与算法：二叉树遍历',
-    excerpt: '二叉树是计算机科学中常用的数据结构，了解如何遍历二叉树对于解决许多问题至关重要...',
-    createdAt: '2023-03-15T11:30:00',
-    category: '算法',
-    author: '李四',
-    coverImage: 'https://picsum.photos/id/94/600/400'
-  }
-]
-
-const categories = ['前端开发', '后端开发', '算法', '运维', '生活随笔']
+const categories = getCategories()
 
 onMounted(() => {
   fetchPosts()
@@ -207,14 +154,7 @@ const goToPost = (id) => {
   router.push(`/blog/${id}`)
 }
 
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
+
 </script>
 
 <style scoped>
